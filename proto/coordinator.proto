@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package coordinator;
+
+service Coordinator {
+    rpc RequestTask(TaskRequest) returns (TaskResponse);
+    rpc UpdateTaskStatus(TaskStatusRequest) returns (TaskStatusResponse);
+
+    rpc SendHeartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+
+    // FOR SNAPSHOT:
+    rpc SubmitSnapshot(SnapshotSubmissionRequest) returns (SnapshotSubmissionResponse);
+}
+
+service CoordinatorInternal {
+    // Secondary sends heartbeats to Primary
+    rpc InternalHeartbeat(InternalHeartbeatRequest) returns (InternalHeartbeatResponse);
+
+    // Used by the SECONDARY to pull the entire state from the PRIMARY
+    rpc GetFullState(GetFullStateRequest) returns (FullStateResponse);
+}
+
+enum ClientTaskStatus {
+    COMPLETED = 0;
+    WAIT = 1;
+}
+
+enum TaskType {
+    FIND_PRIMES = 0;
+    MERGE = 1;
+}
+
+message TaskRequest {
+    string client_id = 1;
+}
+
+message TaskResponse {
+    string task_id = 1;
+    bool has_task = 2;
+    TaskType task_type = 3;
+    ClientTaskStatus client_task_status = 4;
+
+    // For FIND_PRIMES task:
+    string filename = 5;
+
+    // For MERGE task:
+    string file1 = 6;
+    string file2 = 7;
+
+    // FOR SPLIT task:
+    int64 start_index = 8;
+    int64 end_index = 9;
+
+    // For final task:
+    bool last_task = 10;
+}
+
+message TaskStatusRequest {
+    string client_id = 1;
+    string task_id =2;
+    ClientTaskStatus client_task_status = 3;
+    
+    // FOR OUTPUT FILE:
+    string output_filename = 4;
+}
+
+message TaskStatusResponse {
+    bool acknowledged = 1;
+}
+
+message HeartbeatRequest {
+    string client_id = 1;
+}
+
+message HeartbeatResponse {
+    bool acknowledged = 1;
+
+    // FOR SNAPSHOT:
+    bool trigger_snapshot = 2;
+    bool snapshot_marker = 3;
+}
+
+// Messages for Replication
+
+message InternalHeartbeatRequest {
+    string server_id = 1; 
+}
+
+message InternalHeartbeatResponse {
+    bool acknowledged = 1;
+}
+
+message GetFullStateRequest {
+    string server_id = 1;
+}
+
+// Message to transfer the entire state as a JSON string
+message FullStateResponse {
+    bytes state_json = 1;
+}
+
+// FOR SNAPSHOT:
+message SnapshotSubmissionRequest {
+    string client_id = 1;
+
+    // Process states
+    string task_id = 2;
+    string task_stage = 3;
+    int32 progress_percentage = 4;
+    string current_file = 5;
+
+    // Channel messages as JSON string
+    string snapshot_json = 6;
+}
+
+message SnapshotSubmissionResponse {
+    bool acknowledged = 1;
+    string error_message = 2;
+}
