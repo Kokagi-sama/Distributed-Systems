@@ -1,5 +1,14 @@
-# Distributed Systems Coursework
+# Distributed Systems
 
+## Table of Contents
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the System](#running-the-system)
+- [Project Structure](#project-structure)
+- 
 ## Overview
 A distributed AFS system with coordinator-based replication and task management.
 
